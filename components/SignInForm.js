@@ -1,31 +1,32 @@
 /**
- * Created by minhhung on 7/13/18.
+ * Created by minhhung on 7/14/18.
  */
 import React, {Component} from "react";
 import {View, Text} from "react-native";
 import axios from "axios";
+import firebase from 'firebase';
 import {FormLabel, FormInput, Button} from "react-native-elements";
 
 const FIREBASE_ROOT_URL = 'https://us-central1-sample-one-time-password-969d8.cloudfunctions.net';
 
-class SignUpForm extends Component {
-    state = {phone: ''};
+class SignInForm extends Component {
 
-    /**
-     * Arrow function do not need to bind(this) to get proper this (the class) inside function
-     *
-     * Async keyword let Babel knows the function contains async code
-     *
-     * Await keyword tell Babel that the function return a promise, then do not execute function simultaneously
-     */
+    state = {phone: '', code: ''};
+
     handleSubmit = async() => {
+        const {phone, code} = this.state;
         try {
-            await axios.post(`${FIREBASE_ROOT_URL}/createUser`, {phone: this.state.phone});
+            let {data} = await axios.post(`${FIREBASE_ROOT_URL}verifyOneTimePassword`, {
+                phone: phone,
+                code: code
+            });
 
-            await axios.post(`${FIREBASE_ROOT_URL}/requestOneTimePassword`, {phone: this.state.phone})
+            firebase.auth().signInWithCustomToken(data.token);
+
         } catch (error) {
-            console.log(error.error);
+            console.log(error);
         }
+
     };
 
     render() {
@@ -38,6 +39,15 @@ class SignUpForm extends Component {
                         onChangeText={phone=>this.setState({phone})}
                     />
                 </View>
+
+                <View style={{marginBottom: 10}}>
+                    <FormLabel>Enter OTP code</FormLabel>
+                    <FormInput
+                        value={this.state.code}
+                        onChangeText={code=>this.setState({code})}
+                    />
+                </View>
+
                 <Button
                     title="Submit"
                     onPress={this.handleSubmit.bind(this)}
@@ -48,4 +58,4 @@ class SignUpForm extends Component {
 
 }
 
-export default SignUpForm;
+export default SignInForm;
